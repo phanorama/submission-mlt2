@@ -123,9 +123,8 @@ Beberapa fitur seperti `review_text` dan `review_summary` tidak digunakan dalam 
 - Rekomendasi diuji untuk beberapa pengguna sebagai contoh.
 - Sistem dapat mengembalikan 5 rekomendasi terbaik berdasarkan kecocokan vektor fitur.
 - Implementasi tambahan memungkinkan pemfilteran rekomendasi berdasarkan musim.
-- Contoh hasil:
-  - Untuk `user_id = 151944`, direkomendasikan `item_id = [1531631, 162634, 1487216, 432275, 131533]`
-  - Musim: hasil direkomendasikan untuk setiap musim (Winter, Spring, Summer, Fall)
+- Untuk `user_id = 151944`, direkomendasikan `item_id = [1531631, 162634, 1487216, 432275, 131533]`
+- Musim: hasil direkomendasikan untuk setiap musim (Winter, Spring, Summer, Fall)
 
 ## Evaluation
 * **Metrik**: RMSE, dan MAE
