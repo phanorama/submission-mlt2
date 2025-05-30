@@ -75,7 +75,7 @@ Dataset yang digunakan berasal dari [Rent the Runway](https://www.kaggle.com/dat
 | `rented for`     | Tujuan penyewaan pakaian (misalnya wedding, party, vacation)              |
 | `fit`            | Umpan balik tentang kecocokan pakaian terhadap pengguna (`fit`, `small`, `large`) |
 | `size`           | Ukuran standar pakaian yang digunakan                                     |
-| `rating`         | Rating dari produk berdasarkan pengalaman pengguna                         |
+| `rating`         | Rating dari produk berdasarkan pengalaman pengguna `(10,  8,  4,  6,  2)` |
 | `bust size`      | Ukuran lingkar dada pengguna (misalnya `34B`, `36C`)                      |
 | `weight`         | Berat badan pengguna dalam satuan pound                                   |
 | `height`         | Tinggi badan pengguna dalam satuan feet dan inchi                         |
@@ -106,6 +106,7 @@ Beberapa fitur seperti `review_text` dan `review_summary` tidak digunakan dalam 
   - Modus untuk `body type`, `bust size`
   - Median untuk `weight`, `age` (skewed distribution)
   - Mean untuk `height` (normal distribution)
+- mengubah satuan `weight` dan `height` dalam satuan standar internasional (kg dan cm)
 - `bust size` dipisah menjadi `band_size` (numerik) dan `cup_size_raw` (kategorikal).
 - Kolom `review_date` dikonversi menjadi `season`.
 - Label diselaraskan (penyatuan sinonim, perbaikan typo).
@@ -127,7 +128,68 @@ Beberapa fitur seperti `review_text` dan `review_summary` tidak digunakan dalam 
   - Musim: hasil direkomendasikan untuk setiap musim (Winter, Spring, Summer, Fall)
 
 ## Evaluation
+* **Metrik**: RMSE, dan MAE
+
+### Rumus RMSE:
+
+$$RMSE = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}$$
+
+### Rumus MAE:
+
+$$MAE = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|$$
+
+
+### Hasil evaluasi
+Evaluasi dilakukan terhadap sistem rekomendasi berbasis *content-based filtering* yang bertujuan merekomendasikan pakaian kepada pengguna berdasarkan histori peminjaman sebelumnya. Sistem ini diuji dalam dua skenario: sebelum dan sesudah menambahkan preferensi musim pengguna sebagai bagian dari skor rekomendasi (*hybrid score*).
+
+#### 🔹 Sebelum Menambahkan Preferensi Musim
+
+Rekomendasi diberikan berdasarkan kemiripan vektor fitur item dengan profil pengguna (berdasarkan item yang pernah dinyatakan “fit”).
+
+**Rekomendasi Teratas untuk `user_id = 151944`:**
+| item_id | similarity | category |
+|---------|------------|----------|
+| 1531631 | 0.8562     | gown     |
+| 162634  | 0.8526     | gown     |
+| 1487216 | 0.8511     | gown     |
+| 432275  | 0.8482     | gown     |
+| 131533  | 0.8458     | gown     |
+
+### Evaluasi Prediktif (skala dinormalisasi ke (2, 4, 6, 8, 10)):
+
+- **RMSE**: 4.5981  
+- **MAE** : 3.7143
+
+Distribusi musim dari item rekomendasi tidak sesuai dengan histori musim item yang pernah disukai pengguna.
+
+#### 🔹 Setelah Menambahkan Preferensi Musim (*Hybrid Score*)
+
+Sistem ditingkatkan dengan memperhitungkan preferensi musim berdasarkan riwayat peminjaman pengguna. Skor akhir dihitung sebagai:
+$hybrid_score = 0.6 × similarity + 0.2 × season_preference$
+
+**Rekomendasi Teratas untuk `user_id = 151944`:**
+| item_id | similarity | category |
+|---------|------------|----------|
+| 132738  | 0.8261     | gown     |
+| 1986986 | 0.8240     | gown     |
+| 987536  | 0.8212     | gown     |
+| 898283  | 0.8195     | gown     |
+| 153475  | 0.8193     | gown     |
+
+### Evaluasi Hybrid Score (skala dinormalisasi ke (2, 4, 6, 8, 10)):
+
+- **RMSE**: 4.2762  
+- **MAE** : 3.4286
+
+Distribusi musim dari item rekomendasi menjadi lebih selaras dengan histori musim pengguna, menunjukkan bahwa sistem berhasil menyesuaikan preferensi waktu (musim) pengguna ke dalam proses rekomendasi.
 
 ---
+
+## ✅ Kesimpulan
+
+1. **Model rekomendasi berbasis konten (content-based filtering) telah berhasil membangun sistem rekomendasi yang personal dan berbasis histori pengguna.**
+2. **Penambahan preferensi musim meningkatkan akurasi dan relevansi rekomendasi**, yang ditunjukkan oleh penurunan nilai RMSE dari **4.5981** ke **4.2762**, serta MAE dari **3.7143** ke **3.4286**.
+3. Sistem ini fleksibel dan dapat dikembangkan lebih lanjut, misalnya dengan mempertimbangkan konteks waktu lainnya, atau menggabungkan elemen collaborative filtering untuk pendekatan hybrid yang lebih kuat.
+
 
 > 📌 Catatan: Sistem ini bersifat **Content-Based**, sehingga tidak bergantung pada rating pengguna lain. Sangat cocok untuk cold-start item (item baru), tapi terbatas jika user baru belum pernah menyewa pakaian (cold-start user).
