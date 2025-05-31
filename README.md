@@ -1,41 +1,25 @@
 # Rekomendasi Pakaian Personal Berdasarkan Riwayat Kecocokan dan Preferensi Musiman
 **alias: pandorarian**
 ## Project Overview
+
+### Latar Belakang
+
 Sistem rekomendasi ini dikembangkan untuk memberikan saran pakaian kepada pengguna berdasarkan histori kecocokan pakaian sebelumnya (`fit`) dan mempertimbangkan musim saat rekomendasi diberikan. Dengan memanfaatkan Content-Based Filtering yang menggabungkan TF-IDF untuk fitur kategorikal dan normalisasi untuk fitur numerikal, sistem ini bertujuan untuk memberikan rekomendasi yang relevan dan kontekstual.
 
-## Literature Review
+### Literature Review
 
-### Content-Based Filtering
-Content-Based Filtering (CBF) adalah metode sistem rekomendasi yang memanfaatkan informasi dan karakteristik dari item yang telah disukai pengguna untuk merekomendasikan item baru yang serupa. Pendekatan ini membangun **profil pengguna berdasarkan fitur item yang telah diberi rating tinggi atau dinyatakan cocok**. CBF sangat berguna dalam skenario di mana **interaksi antar pengguna terbatas atau tidak tersedia**, seperti pada pengguna baru atau platform dengan data rating yang tidak saling terkoneksi antar user.
-
-**Referensi:**
-- Lops, P., De Gemmis, M., & Semeraro, G. (2011). *Content-based Recommender Systems: State of the Art and Trends*. In *Recommender Systems Handbook* (pp. 73–105). Springer.
-
-### TF-IDF untuk Representasi Fitur Kategorikal
-TF-IDF (Term Frequency-Inverse Document Frequency) adalah teknik pembobotan dalam text mining yang digunakan untuk menilai seberapa penting suatu kata dalam dokumen relatif terhadap kumpulan dokumen. Dalam konteks sistem rekomendasi, TF-IDF dapat digunakan untuk mengubah **fitur kategorikal seperti jenis pakaian, musim, dan tipe tubuh menjadi vektor numerik yang bisa dibandingkan antar item**.
-
-**Referensi:**
-- Ramos, J. (2003). *Using TF-IDF to Determine Word Relevance in Document Queries*. In *Proceedings of the First Instructional Conference on Machine Learning*.
-
-### Cosine Similarity untuk Pengukuran Kecocokan
-Cosine similarity adalah metrik jarak yang digunakan untuk mengukur kesamaan antara dua vektor dengan menghitung cosinus dari sudut di antara mereka. Ini sangat cocok untuk TF-IDF karena skala absolut tidak penting — hanya arah vektor yang relevan. Dalam sistem ini, cosine similarity digunakan untuk menghitung **kesamaan antara vektor profil pengguna dan vektor tiap item**.
-
-**Referensi:**
-- Huang, A. (2008). *Similarity Measures for Text Document Clustering*. In *Proceedings of the Sixth New Zealand Computer Science Research Student Conference* (NZCSRSC), Christchurch.
-
-### Normalisasi Data dengan StandardScaler
-
-Dalam sistem rekomendasi berbasis konten, fitur numerikal seperti berat badan, tinggi badan, usia, ukuran pakaian, dan ukuran band dapat memiliki skala nilai yang berbeda-beda. Jika digunakan tanpa normalisasi, fitur dengan skala lebih besar dapat mendominasi perhitungan similarity dan menyebabkan bias.
-
-Oleh karena itu, fitur numerik dinormalisasi menggunakan **StandardScaler** dari scikit-learn, yang melakukan transformasi data ke distribusi standar dengan:
+#### Content-Based Filtering
+Content-Based Filtering (CBF) adalah metode sistem rekomendasi yang memanfaatkan informasi dan karakteristik dari item yang telah disukai pengguna untuk merekomendasikan item baru yang serupa. Pendekatan ini membangun **profil pengguna berdasarkan fitur item yang telah diberi rating tinggi atau dinyatakan cocok**. CBF sangat berguna dalam skenario di mana **interaksi antar pengguna terbatas atau tidak tersedia**, seperti pada pengguna baru atau platform dengan data rating yang tidak saling terkoneksi antar user [1].
+#### TF-IDF untuk Representasi Fitur Kategorikal
+TF-IDF (Term Frequency-Inverse Document Frequency) adalah teknik pembobotan dalam text mining yang digunakan untuk menilai seberapa penting suatu kata dalam dokumen relatif terhadap kumpulan dokumen. Dalam konteks sistem rekomendasi, TF-IDF dapat digunakan untuk mengubah **fitur kategorikal seperti jenis pakaian, musim, dan tipe tubuh menjadi vektor numerik yang bisa dibandingkan antar item** [2].
+#### Cosine Similarity untuk Pengukuran Kecocokan
+Cosine similarity adalah metrik jarak yang digunakan untuk mengukur kesamaan antara dua vektor dengan menghitung cosinus dari sudut di antara mereka. Ini sangat cocok untuk TF-IDF karena skala absolut tidak penting — hanya arah vektor yang relevan. Dalam sistem ini, cosine similarity digunakan untuk menghitung **kesamaan antara vektor profil pengguna dan vektor tiap item** [3].
+#### Normalisasi Data dengan StandardScaler
+Dalam sistem rekomendasi berbasis konten, fitur numerikal seperti berat badan, tinggi badan, usia, ukuran pakaian, dan ukuran band dapat memiliki skala nilai yang berbeda-beda. Jika digunakan tanpa normalisasi, fitur dengan skala lebih besar dapat mendominasi perhitungan similarity dan menyebabkan bias. Oleh karena itu, fitur numerik dinormalisasi menggunakan **StandardScaler** dari scikit-learn, yang melakukan transformasi data ke distribusi standar dengan:
 - **Mean = 0**
 - **Standard deviation = 1**
-
-Dengan melakukan normalisasi ini, setiap fitur numerik memberikan kontribusi yang seimbang dalam perhitungan jarak antar vektor (cosine similarity), sehingga hasil rekomendasi menjadi lebih akurat dan adil.
-
-**Referensi:**
-- Han, J., Pei, J., & Kamber, M. (2011). *Data Mining: Concepts and Techniques* (3rd ed.). Morgan Kaufmann.
-- Pedregosa, F. et al. (2011). *Scikit-learn: Machine Learning in Python*, Journal of Machine Learning Research, 12, pp. 2825–2830.
+  
+Dengan melakukan normalisasi ini, setiap fitur numerik memberikan kontribusi yang seimbang dalam perhitungan jarak antar vektor (cosine similarity), sehingga hasil rekomendasi menjadi lebih akurat dan adil [4], [5].
 
 ## Business Understanding
 
@@ -60,7 +44,8 @@ Dataset yang digunakan berasal dari [Rent the Runway](https://www.kaggle.com/dat
 - **Jumlah produk:** 5.850
 - **Jumlah transaksi:** 192.544
 - **Jumlah missing values: 64759**
-- **Jumlah baris data duplikat: 229**
+- **Jumlah baris data duplikat (sebelum preprocessing):189**
+- **Jumlah baris data duplikat (setelah preprocessing): 229**
 
 ### 📁 Deskripsi Fitur
 
@@ -103,28 +88,38 @@ Beberapa fitur seperti `review_text` dan `review_summary` tidak digunakan dalam 
 ## Data Preparation
 - Kolom tidak relevan (`review_text`, `review_summary`) dibuang.
 - Data missing ditangani:
+  - Drop missing value untuk `rating` dan `rented for` 
   - Modus untuk `body type`, `bust size`
   - Median untuk `weight`, `age` (skewed distribution)
   - Mean untuk `height` (normal distribution)
 - mengubah satuan `weight` dan `height` dalam satuan standar internasional (kg dan cm)
 - `bust size` dipisah menjadi `band_size` (numerik) dan `cup_size_raw` (kategorikal).
 - Kolom `review_date` dikonversi menjadi `season`.
+- Membuang kolom `bust size` dan `review_date` karena udah di representasikan dalam bentuk lain
 - Label diselaraskan (penyatuan sinonim, perbaikan typo).
 - Duplikat dihapus.
 - TF-IDF digunakan untuk representasi fitur kategorikal: `category`, `rented for`, `season`, `body type`, dan `cup_size_raw`.
 - Normalisasi (StandardScaler) diterapkan pada fitur numerikal: `weight`, `height`, `size`, `age`, `band_size`.
 - Kedua jenis fitur digabung dengan `scipy.sparse.hstack`.
 
-## Modelling & Results
-### Modelling
+## Modelling
 - Profil pengguna dibuat dari rata-rata vektor item yang pernah cocok (`fit`).
 - Rekomendasi dihitung dengan cosine similarity terhadap semua item, difilter agar tidak menyarankan item yang sudah dilihat user.
-### Results
 - Rekomendasi diuji untuk beberapa pengguna sebagai contoh.
 - Sistem dapat mengembalikan 5 rekomendasi terbaik berdasarkan kecocokan vektor fitur.
 - Implementasi tambahan memungkinkan pemfilteran rekomendasi berdasarkan musim.
-- Untuk `user_id = 151944`, direkomendasikan `item_id = [1531631, 162634, 1487216, 432275, 131533]`
-- Musim: hasil direkomendasikan untuk setiap musim (Winter, Spring, Summer, Fall)
+- Hasilnya, sebagai contoh untuk `user_id = 151944`, direkomendasikan `item_id = [1531631, 162634, 1487216, 432275, 131533]` oleh model
+
+**Rekomendasi Teratas untuk `user_id = 151944`:**  
+| item_id | similarity | category |
+|---------|------------|----------|
+| 1531631 | 0.8562     | gown     |
+| 162634  | 0.8526     | gown     |
+| 1487216 | 0.8511     | gown     |
+| 432275  | 0.8482     | gown     |
+| 131533  | 0.8458     | gown     |
+
+- Dan hasil direkomendasikan untuk setiap musim (Winter, Spring, Summer, Fall)
 
 ## Evaluation
 * **Metrik**: RMSE, dan MAE
@@ -144,18 +139,7 @@ Evaluasi dilakukan terhadap sistem rekomendasi berbasis *content-based filtering
 #### 🔹 Sebelum Menambahkan Preferensi Musim
 
 Rekomendasi diberikan berdasarkan kemiripan vektor fitur item dengan profil pengguna (berdasarkan item yang pernah dinyatakan “fit”).
-
-**Rekomendasi Teratas untuk `user_id = 151944`:**
-| item_id | similarity | category |
-|---------|------------|----------|
-| 1531631 | 0.8562     | gown     |
-| 162634  | 0.8526     | gown     |
-| 1487216 | 0.8511     | gown     |
-| 432275  | 0.8482     | gown     |
-| 131533  | 0.8458     | gown     |
-
-### Evaluasi Prediktif (skala dinormalisasi ke (2, 4, 6, 8, 10)):
-
+Evaluasi Prediktif (skala dinormalisasi ke (2, 4, 6, 8, 10)):
 - **RMSE**: 4.5981  
 - **MAE** : 3.7143
 
@@ -164,9 +148,10 @@ Distribusi musim dari item rekomendasi tidak sesuai dengan histori musim item ya
 #### 🔹 Setelah Menambahkan Preferensi Musim (*Hybrid Score*)
 
 Sistem ditingkatkan dengan memperhitungkan preferensi musim berdasarkan riwayat peminjaman pengguna. Skor akhir dihitung sebagai:
-$hybrid_score = 0.6 × similarity + 0.2 × season_preference$
 
-**Rekomendasi Teratas untuk `user_id = 151944`:**
+$$\text{hybrid_score} = 0.6 × \text{similarity} + 0.2 × \text{season_preference}$$
+
+**Rekomendasi Teratas untuk `user_id = 151944` dengan preferensi musim:**
 | item_id | similarity | category |
 |---------|------------|----------|
 | 132738  | 0.8261     | gown     |
@@ -175,7 +160,7 @@ $hybrid_score = 0.6 × similarity + 0.2 × season_preference$
 | 898283  | 0.8195     | gown     |
 | 153475  | 0.8193     | gown     |
 
-### Evaluasi Hybrid Score (skala dinormalisasi ke (2, 4, 6, 8, 10)):
+Evaluasi Hybrid Score (skala dinormalisasi ke (2, 4, 6, 8, 10)):
 
 - **RMSE**: 4.2762  
 - **MAE** : 3.4286
@@ -189,6 +174,13 @@ Distribusi musim dari item rekomendasi menjadi lebih selaras dengan histori musi
 1. **Model rekomendasi berbasis konten (content-based filtering) telah berhasil membangun sistem rekomendasi yang personal dan berbasis histori pengguna.**
 2. **Penambahan preferensi musim meningkatkan akurasi dan relevansi rekomendasi**, yang ditunjukkan oleh penurunan nilai RMSE dari **4.5981** ke **4.2762**, serta MAE dari **3.7143** ke **3.4286**.
 3. Sistem ini fleksibel dan dapat dikembangkan lebih lanjut, misalnya dengan mempertimbangkan konteks waktu lainnya, atau menggabungkan elemen collaborative filtering untuk pendekatan hybrid yang lebih kuat.
+
+## Referensi
+[1] P. Lops, M. De Gemmis, and G. Semeraro, “Content-based Recommender Systems: State of the Art and Trends,” in *Recommender Systems Handbook*, F. Ricci, L. Rokach, B. Shapira, and P. B. Kantor, Eds. Springer, 2011, pp. 73–105. \
+[2] J. Ramos, “Using TF-IDF to Determine Word Relevance in Document Queries,” in *Proceedings of the First Instructional Conference on Machine Learning*, 2003. \
+[3] A. Huang, “Similarity Measures for Text Document Clustering,” in *Proc. 6th New Zealand Computer Science Research Student Conf. (NZCSRSC)*, Christchurch, 2008. \
+[4] J. Han, J. Pei, and M. Kamber, *Data Mining: Concepts and Techniques*, 3rd ed. Morgan Kaufmann, 2011. \
+[5] F. Pedregosa et al., “Scikit-learn: Machine Learning in Python,” *J. Mach. Learn. Res.*, vol. 12, pp. 2825–2830, 2011. 
 
 
 > 📌 Catatan: Sistem ini bersifat **Content-Based**, sehingga tidak bergantung pada rating pengguna lain. Sangat cocok untuk cold-start item (item baru), tapi terbatas jika user baru belum pernah menyewa pakaian (cold-start user).
