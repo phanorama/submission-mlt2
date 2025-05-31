@@ -40,12 +40,10 @@ Pengguna sering kesulitan menemukan pakaian yang pas dan sesuai dengan kondisi a
 
 Dataset yang digunakan berasal dari [Rent the Runway](https://www.kaggle.com/datasets/rmisra/clothing-fit-dataset-for-size-recommendation), yang berisi data ulasan pelanggan terhadap produk pakaian yang mereka sewa. Dataset ini mencakup:
 
-- **Jumlah pengguna:** 105.508
-- **Jumlah produk:** 5.850
-- **Jumlah transaksi:** 192.544
+- **Jumlah baris atau transaksi:** 192.544
+- **Jumlah kolom: 15**
+- **Jumlah baris data asli duplikat: 189**
 - **Jumlah missing values: 64759**
-- **Jumlah baris data duplikat (sebelum preprocessing):189**
-- **Jumlah baris data duplikat (setelah preprocessing): 229**
 
 ### 📁 Deskripsi Fitur
 
@@ -67,7 +65,7 @@ Dataset yang digunakan berasal dari [Rent the Runway](https://www.kaggle.com/dat
 | `age`            | Usia pengguna                                                             |
 | `body type`      | Tipe tubuh pengguna (misalnya athletic, pear, hourglass)                  |
 
-Beberapa fitur seperti `review_text` dan `review_summary` tidak digunakan dalam pemodelan karena tidak relevan untuk pendekatan berbasis konten. Fokus diberikan pada fitur-fitur kategorikal dan numerikal yang menggambarkan karakteristik pengguna dan produk, yang digunakan untuk membangun sistem rekomendasi personal dan kontekstual.
+
 ### Detail missing values
 | Kolom       | Jumlah Missing Value |
 |-------------|----------------------|
@@ -78,7 +76,9 @@ Beberapa fitur seperti `review_text` dan `review_summary` tidak digunakan dalam 
 | weight      | 29982                |
 | rating      | 82                   |
 | rented for  | 10                   |
+| reviwe text |  0                   |
 | body type   | 14637                |
+| review summary | 0                 |
 | category    | 0                    |
 | height      | 677                  |
 | size        | 0                    |
@@ -86,23 +86,39 @@ Beberapa fitur seperti `review_text` dan `review_summary` tidak digunakan dalam 
 | review_date | 0                    |
 
 ## Data Preparation
-- Kolom tidak relevan (`review_text`, `review_summary`) dibuang.
-- Data missing ditangani:
-  - Drop missing value untuk `rating` dan `rented for` 
-  - Modus untuk `body type`, `bust size`
-  - Median untuk `weight`, `age` (skewed distribution)
-  - Mean untuk `height` (normal distribution)
-- mengubah satuan `weight` dan `height` dalam satuan standar internasional (kg dan cm)
-- `bust size` dipisah menjadi `band_size` (numerik) dan `cup_size_raw` (kategorikal).
-- Kolom `review_date` dikonversi menjadi `season`.
-- Membuang kolom `bust size` dan `review_date` karena udah di representasikan dalam bentuk lain
-- Label diselaraskan (penyatuan sinonim, perbaikan typo).
-- Duplikat dihapus.
-- TF-IDF digunakan untuk representasi fitur kategorikal: `category`, `rented for`, `season`, `body type`, dan `cup_size_raw`.
-- Normalisasi (StandardScaler) diterapkan pada fitur numerikal: `weight`, `height`, `size`, `age`, `band_size`.
-- Kedua jenis fitur digabung dengan `scipy.sparse.hstack`.
+1. **Penghapusan kolom tidak relevan**: Kolom `review_summary` dan `review_text` dibuang karena tidak dibutuhkan untuk tujuan sistem rekomendasi.
+2. **Penanganan missing values untuk kolom `rating` dan `rented for`**: Baris dengan nilai kosong pada kolom `rating` dan `rented for` dihapus menggunakan `dropna()` karena memiliki sedikit missing value.
+3. **Imputasi missing values kolom kategorikal**: Kolom `bust size` dan `body type` diisi dengan modus (nilai yang paling sering muncul) karena berjenis data kategorikal.
+4. **Konversi dan imputasi kolom `weight`**: 
+   - Satuan diubah dari pounds (lbs) menjadi kilogram (kg) dengan mengalikan 0.453592
+   - Missing values diisi dengan median karena distribusi data skewed (skewness = 1.396 > 1)
+5. **Konversi dan imputasi kolom `height`**: 
+   - Format diubah dari feet'inches" menjadi satuan inci terlebih dahulu
+   - Missing values diisi dengan mean karena distribusi mendekati normal (skewness ≈ 0)
+   - Kemudian dikonversi ke satuan sentimeter (cm) dengan mengalikan 2.54
+6. **Imputasi kolom `age`**: Missing values diisi dengan median karena distribusi data skewed (skewness > 1).
+7. **Pembulatan nilai `weight`**: Nilai berat dibatasi hingga dua digit di belakang koma untuk konsistensi.
+8. **Pemisahan kolom `bust size`**: 
+   - Kolom `bust size` dipecah menjadi dua kolom baru:
+     - `band_size`: menyimpan angka (numerik) yang merepresentasikan lingkar dada
+     - `cup_size_raw`: menyimpan huruf (kategorikal) yang merepresentasikan ukuran cup
+9. **Konversi `review_date` menjadi `season`**: 
+   - Tanggal ulasan dikonversi menjadi musim (Winter, Spring, Summer, Fall)
+   - Hal ini dilakukan untuk mengetahui kapan pengguna menyewa dan memberikan rating
+10. **Penghapusan kolom yang sudah direpresentasikan**: Kolom `bust size` dan `review_date` dihapus karena sudah direpresentasikan dalam bentuk fitur baru.
+11. **Perbaikan label pada `cup_size_raw`**: Label `ddde` (hasil dari pemisahan `ddd/e`) diganti dengan `e` untuk konsistensi.
+12. **Konsolidasi label `rented for`**: Label `party: cocktail` digabungkan menjadi `party` untuk perumuman kategori.
+13. **Konsolidasi label `category`**: 
+    - Bentuk jamak dan tunggal dikonsolidasi (contoh: `pant` → `pants`, `legging` → `leggings`)
+    - Perbaikan typo dan sinonim (contoh: `sweatshirt` → `sweatershirt`, `tee` → `t-shirt`)
+    - Perbaikan anomali kategori berdasarkan analisis review text (contoh: `for` → `turtleneck`, `print` → `dress`)
+14. **Penghapusan data duplikat**: Data yang terduplikat dihapus untuk memastikan kualitas dataset.
+15. **Penggabungan fitur kategorikal**: Fitur kategorikal (`category`, `rented for`, `season`, `body type`, `cup_size_raw`) digabungkan menjadi satu kolom `text_features`.
+16. **Vektorisasi fitur kategorikal**: Fitur kategorikal yang telah digabung diubah menjadi representasi TF-IDF menggunakan `TfidfVectorizer`.
+17. **Normalisasi fitur numerikal**: Fitur numerikal (`weight`, `height`, `size`, `age`, `band_size`) dinormalisasi menggunakan `StandardScaler` untuk menghindari bias akibat perbedaan skala.
+18. **Penggabungan vektor fitur**: Fitur kategorikal (TF-IDF) dan fitur numerikal (normalized) digabungkan menggunakan `scipy.sparse.hstack` untuk membentuk vektor fitur akhir yang akan digunakan dalam sistem rekomendasi.
 
-## Modelling
+## Modeling
 - Profil pengguna dibuat dari rata-rata vektor item yang pernah cocok (`fit`).
 - Rekomendasi dihitung dengan cosine similarity terhadap semua item, difilter agar tidak menyarankan item yang sudah dilihat user.
 - Rekomendasi diuji untuk beberapa pengguna sebagai contoh.
@@ -138,7 +154,7 @@ Evaluasi dilakukan terhadap sistem rekomendasi berbasis *content-based filtering
 
 #### 🔹 Sebelum Menambahkan Preferensi Musim
 
-Rekomendasi diberikan berdasarkan kemiripan vektor fitur item dengan profil pengguna (berdasarkan item yang pernah dinyatakan “fit”).
+Rekomendasi diberikan berdasarkan kemiripan vektor fitur item dengan profil pengguna (berdasarkan item yang pernah dinyatakan "fit").
 Evaluasi Prediktif (skala dinormalisasi ke (2, 4, 6, 8, 10)):
 - **RMSE**: 4.5981  
 - **MAE** : 3.7143
@@ -176,11 +192,11 @@ Distribusi musim dari item rekomendasi menjadi lebih selaras dengan histori musi
 3. Sistem ini fleksibel dan dapat dikembangkan lebih lanjut, misalnya dengan mempertimbangkan konteks waktu lainnya, atau menggabungkan elemen collaborative filtering untuk pendekatan hybrid yang lebih kuat.
 
 ## Referensi
-[1] P. Lops, M. De Gemmis, and G. Semeraro, “Content-based Recommender Systems: State of the Art and Trends,” in *Recommender Systems Handbook*, F. Ricci, L. Rokach, B. Shapira, and P. B. Kantor, Eds. Springer, 2011, pp. 73–105. \
-[2] J. Ramos, “Using TF-IDF to Determine Word Relevance in Document Queries,” in *Proceedings of the First Instructional Conference on Machine Learning*, 2003. \
-[3] A. Huang, “Similarity Measures for Text Document Clustering,” in *Proc. 6th New Zealand Computer Science Research Student Conf. (NZCSRSC)*, Christchurch, 2008. \
+[1] P. Lops, M. De Gemmis, and G. Semeraro, "Content-based Recommender Systems: State of the Art and Trends," in *Recommender Systems Handbook*, F. Ricci, L. Rokach, B. Shapira, and P. B. Kantor, Eds. Springer, 2011, pp. 73–105. \
+[2] J. Ramos, "Using TF-IDF to Determine Word Relevance in Document Queries," in *Proceedings of the First Instructional Conference on Machine Learning*, 2003. \
+[3] A. Huang, "Similarity Measures for Text Document Clustering," in *Proc. 6th New Zealand Computer Science Research Student Conf. (NZCSRSC)*, Christchurch, 2008. \
 [4] J. Han, J. Pei, and M. Kamber, *Data Mining: Concepts and Techniques*, 3rd ed. Morgan Kaufmann, 2011. \
-[5] F. Pedregosa et al., “Scikit-learn: Machine Learning in Python,” *J. Mach. Learn. Res.*, vol. 12, pp. 2825–2830, 2011. 
+[5] F. Pedregosa et al., "Scikit-learn: Machine Learning in Python," *J. Mach. Learn. Res.*, vol. 12, pp. 2825–2830, 2011. 
 
 
 > 📌 Catatan: Sistem ini bersifat **Content-Based**, sehingga tidak bergantung pada rating pengguna lain. Sangat cocok untuk cold-start item (item baru), tapi terbatas jika user baru belum pernah menyewa pakaian (cold-start user).
